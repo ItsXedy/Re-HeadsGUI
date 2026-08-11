@@ -5,7 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Target Parent (CoreGui preferred, fallback to PlayerGui for mobile execution)
+-- Target Parent (CoreGui preferred, fallback to PlayerGui for mobile)
 local parentGui = pcall(function() return CoreGui.Name end) and CoreGui or LocalPlayer:WaitForChild("PlayerGui")
 
 -- Clean up existing instances
@@ -202,7 +202,9 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- AutoFlip Execution
+-- AutoFlip Execution with Single-Fire Debounce Guard
+local isFiring = false
+
 ToggleBtn.MouseButton1Click:Connect(function()
     autoFlipping = not autoFlipping
     
@@ -212,8 +214,12 @@ ToggleBtn.MouseButton1Click:Connect(function()
         
         task.spawn(function()
             while autoFlipping and ScreenGui.Parent do
-                if ClickedEvent then
+                if ClickedEvent and not isFiring then
+                    isFiring = true
                     ClickedEvent:FireServer()
+                    task.delay(0.05, function()
+                        isFiring = false
+                    end)
                 end
                 
                 local delayTime = getSanitizedDelay()
